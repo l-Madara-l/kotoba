@@ -1,0 +1,115 @@
+@import "tailwindcss";
+
+@theme {
+  --color-torii: #BC3A32;
+  --color-torii-dark: #D65A50;
+  --color-torii-hover: #9E2E27;
+  --color-sumi: #202321;
+  --color-washi: #F5F0E6;
+  --color-marfil: #FFFCF5;
+  --color-musgo: #66785F;
+  --color-musgo-light: #91A486;
+  --color-oro: #C6A15B;
+  --color-piedra: #D9D5CB;
+  --color-piedra-dark: #3a3e3b;
+  --color-indigo: #334A68;
+
+  --font-serif-jp: 'Noto Serif JP', serif;
+  --font-sans-jp: 'Noto Sans JP', sans-serif;
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+:root {
+  --bg-primary: #F5F0E6;
+  --bg-surface: #FFFCF5;
+  --text-primary: #202321;
+  --text-muted: #575D58;
+  --border-color: #D9D5CB;
+  --accent-red: #BC3A32;
+  --accent-green: #66785F;
+}
+
+.dark {
+  --bg-primary: #181B19;
+  --bg-surface: #232724;
+  --text-primary: #F5F0E6;
+  --text-muted: #9EACA1;
+  --border-color: #383D39;
+  --accent-red: #D65A50;
+  --accent-green: #91A486;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Subtle washi paper fibers texture effect */
+.washi-pattern {
+  background-color: var(--bg-primary);
+  background-image: radial-gradient(rgba(32, 35, 33, 0.03) 1px, transparent 0);
+  background-size: 24px 24px;
+}
+
+.dark .washi-pattern {
+  background-image: radial-gradient(rgba(245, 240, 230, 0.03) 1px, transparent 0);
+}
+
+/* Subtle traditional Seigaiha wave pattern overlay */
+.seigaiha-pattern {
+  background-image: radial-gradient(circle at 100% 150%, var(--bg-surface) 24%, var(--border-color) 25%, var(--bg-surface) 28%, var(--border-color) 29%, var(--bg-surface) 36%, var(--border-color) 36%, var(--bg-surface) 40%, transparent 40%),
+    radial-gradient(circle at 0    150%, var(--bg-surface) 24%, var(--border-color) 25%, var(--bg-surface) 28%, var(--border-color) 29%, var(--bg-surface) 36%, var(--border-color) 36%, var(--bg-surface) 40%, transparent 40%),
+    radial-gradient(circle at 50%  100%, var(--bg-surface) 10%, var(--border-color) 11%, var(--bg-surface) 23%, var(--border-color) 24%, var(--bg-surface) 30%, var(--border-color) 31%, var(--bg-surface) 43%, var(--border-color) 44%, var(--bg-surface) 50%, transparent 50%),
+    radial-gradient(circle at 100% 50%,  var(--bg-surface) 5%,  var(--border-color) 6%,  var(--bg-surface) 15%, var(--border-color) 16%, var(--bg-surface) 20%, var(--border-color) 21%, var(--bg-surface) 30%, transparent 30%),
+    radial-gradient(circle at 0    50%,  var(--bg-surface) 5%,  var(--border-color) 6%,  var(--bg-surface) 15%, var(--border-color) 16%, var(--bg-surface) 20%, var(--border-color) 21%, var(--bg-surface) 30%, transparent 30%);
+  background-size: 50px 25px;
+}
+
+/* Hanko Japanese seal stamp style */
+.hanko-seal {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #BC3A32;
+  color: #BC3A32;
+  font-family: var(--font-serif-jp);
+  font-weight: 700;
+  border-radius: 4px;
+  transform: rotate(-3deg);
+  letter-spacing: 0.05em;
+  box-shadow: inset 0 0 0 1px rgba(188, 58, 50, 0.2);
+}
+
+.dark .hanko-seal {
+  border-color: #D65A50;
+  color: #D65A50;
+  box-shadow: inset 0 0 0 1px rgba(214, 90, 80, 0.3);
+}
+
+/* Kanji stroke grid cell */
+.kanji-grid {
+  position: relative;
+  background-image: 
+    linear-gradient(to right, rgba(217, 213, 203, 0.5) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(217, 213, 203, 0.5) 1px, transparent 1px);
+  background-size: 50% 50%;
+  background-position: -1px -1px;
+}
+
+/* Custom Japanese scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #BC3A32;
+}
