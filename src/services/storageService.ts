@@ -18,13 +18,17 @@ export const DEFAULT_USER_PROFILE: UserProfile = {
   knownKanji: false,
   goal: 'travel',
   learningStyle: 'balanced',
-  streakDays: 3,
+  streakDays: 1,
   lastStudyDate: new Date().toISOString().split('T')[0],
-  totalStudyTimeMinutes: 45,
-  xp: 320,
-  level: 2,
-  completedLessons: ['l0-phonetics', 'l0-writing-system'],
-  hankoBadges: ['badge-first-step'],
+  totalStudyTimeMinutes: 0,
+  xp: 0,
+  level: 1,
+  completedLessons: [],
+  hankoBadges: [],
+  favorites: [],
+  lastActiveLessonId: 'l0-phonetics',
+  currentModuleId: 'module-0',
+  lastActivityDate: new Date().toISOString(),
   preferences: {
     theme: 'light',
     showRomaji: true,
@@ -45,10 +49,22 @@ export class StorageService {
     try {
       const stored = localStorage.getItem(STORAGE_KEYS.USER_PROFILE);
       if (stored) {
-        return JSON.parse(stored);
+        const parsed = JSON.parse(stored);
+        // Robust merge with defaults to safeguard against older schemas
+        return {
+          ...DEFAULT_USER_PROFILE,
+          ...parsed,
+          preferences: {
+            ...DEFAULT_USER_PROFILE.preferences,
+            ...(parsed.preferences || {})
+          },
+          completedLessons: Array.isArray(parsed.completedLessons) ? parsed.completedLessons : [],
+          hankoBadges: Array.isArray(parsed.hankoBadges) ? parsed.hankoBadges : [],
+          favorites: Array.isArray(parsed.favorites) ? parsed.favorites : []
+        };
       }
-    } catch {
-      // Fallback
+    } catch (e) {
+      console.warn('Failed to parse user profile from localStorage, resetting to default', e);
     }
     this.saveUserProfile(DEFAULT_USER_PROFILE);
     return DEFAULT_USER_PROFILE;

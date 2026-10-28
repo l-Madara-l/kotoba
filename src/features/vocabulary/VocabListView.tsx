@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Filter, BookOpen, Sparkles, Layers, ArrowUpDown, Volume2 } from 'lucide-react';
+import { Search, Filter, BookOpen, Sparkles, Layers, ArrowUpDown, Volume2, Star } from 'lucide-react';
 import { SRSItem, VocabItem } from '../../types';
 import { VOCAB_DATA } from '../../data/vocabData';
 import { AudioButton } from '../../components/common/AudioButton';
@@ -9,12 +9,16 @@ interface VocabListViewProps {
   srsItems: SRSItem[];
   onStartReview: () => void;
   showRomaji: boolean;
+  favorites?: string[];
+  onToggleFavorite?: (id: string) => void;
 }
 
 export const VocabListView: React.FC<VocabListViewProps> = ({
   srsItems,
   onStartReview,
-  showRomaji
+  showRomaji,
+  favorites = [],
+  onToggleFavorite
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -149,6 +153,18 @@ export const VocabListView: React.FC<VocabListViewProps> = ({
                     {item.jlpt}
                   </span>
                   <AudioButton text={item.word} />
+                  {onToggleFavorite && (
+                    <button
+                      onClick={() => onToggleFavorite(item.id)}
+                      title={favorites.includes(item.id) ? 'Quitar de favoritos' : 'Guardar en favoritos'}
+                      className="p-1.5 rounded-lg border border-piedra/60 hover:border-oro hover:bg-oro/10 transition-colors"
+                    >
+                      <Star
+                        size={14}
+                        className={favorites.includes(item.id) ? 'fill-oro text-oro' : 'text-sumi/50 dark:text-washi/50'}
+                      />
+                    </button>
+                  )}
                 </div>
               </div>
 

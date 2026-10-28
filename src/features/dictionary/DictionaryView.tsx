@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, BookOpen, Volume2, BookmarkPlus, Sparkles, Check } from 'lucide-react';
+import { Search, BookOpen, Volume2, BookmarkPlus, Sparkles, Check, Star } from 'lucide-react';
 import { VOCAB_DATA } from '../../data/vocabData';
 import { KANJI_DATA } from '../../data/kanjiData';
 import { AudioButton } from '../../components/common/AudioButton';
@@ -7,10 +7,14 @@ import { audioService } from '../../services/audioService';
 
 interface DictionaryViewProps {
   onAddWordToSRS?: (word: string, reading: string, spanish: string) => void;
+  favorites?: string[];
+  onToggleFavorite?: (id: string) => void;
 }
 
 export const DictionaryView: React.FC<DictionaryViewProps> = ({
-  onAddWordToSRS
+  onAddWordToSRS,
+  favorites = [],
+  onToggleFavorite
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [addedWords, setAddedWords] = useState<string[]>([]);
@@ -115,6 +119,19 @@ export const DictionaryView: React.FC<DictionaryViewProps> = ({
               {/* Action Buttons */}
               <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
                 <AudioButton text={item.word} />
+
+                {onToggleFavorite && (
+                  <button
+                    onClick={() => onToggleFavorite(item.id)}
+                    title={favorites.includes(item.id) ? 'Quitar de favoritos' : 'Guardar en favoritos'}
+                    className="p-2 rounded-xl border border-piedra/80 hover:border-oro hover:bg-oro/10 transition-colors"
+                  >
+                    <Star
+                      size={15}
+                      className={favorites.includes(item.id) ? 'fill-oro text-oro' : 'text-sumi/50 dark:text-washi/50'}
+                    />
+                  </button>
+                )}
 
                 <button
                   onClick={() => handleAddCard(item.word, item.reading, item.meaningEs)}

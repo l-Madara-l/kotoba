@@ -210,6 +210,7 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
           onClose={() => setActiveLessonId(null)}
           onCompleteLesson={onLessonCompleted}
           isCompleted={profile.completedLessons.includes(activeLessonId)}
+          onNavigateLesson={nextId => setActiveLessonId(nextId)}
         />
       )}
     </div>

@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { UserProfile, SRSItem, DailyStudyRecord } from '../../types';
 import { SRSService, AdaptiveMistake } from '../../services/srsService';
+import { ProgressService } from '../../services/progressService';
 import { HankoBadge } from '../../components/common/HankoBadge';
 import { HANKO_BADGES } from '../../data/hankoBadgesData';
 import { ActiveTab } from '../../components/layout/Sidebar';
@@ -56,12 +57,15 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const goalMinutes = profile.preferences.dailyGoalMinutes || 30;
   const goalPercent = Math.min(100, Math.round((minutesToday / goalMinutes) * 100));
 
-  // Next recommended lesson
+  // Next recommended lesson dynamically computed from user completedLessons
+  const pendingLesson = ProgressService.getNextPendingLesson(profile);
   const recommendedLesson = {
-    id: 'l0-phonetics',
-    title: 'Las 5 vocales puras y el compás de mora',
-    module: 'Nivel 0: Fundamentos',
-    time: 8
+    id: pendingLesson.lessonId,
+    title: pendingLesson.title,
+    titleJp: pendingLesson.titleJp,
+    module: pendingLesson.moduleName,
+    time: pendingLesson.estimatedMinutes,
+    isAllCompleted: pendingLesson.isAllCompleted
   };
 
   return (
@@ -135,7 +139,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   className="px-6 py-3 rounded-xl bg-torii text-marfil text-sm font-semibold hover:bg-torii-hover flex items-center gap-2 shadow-md transition-transform active:scale-95 group-hover:shadow-lg"
                 >
                   <Play size={16} className="fill-marfil" />
-                  <span>Continuar Ruta de Aprendizaje</span>
+                  <span>
+                    {recommendedLesson.isAllCompleted
+                      ? 'Repasar Lección Recomendada'
+                      : 'Continuar Ruta de Aprendizaje'}
+                  </span>
                 </button>
 
                 <button

@@ -14,7 +14,8 @@ import {
   Search, 
   Award, 
   Settings,
-  X
+  X,
+  Star
 } from 'lucide-react';
 
 export type ActiveTab = 
@@ -30,6 +31,7 @@ export type ActiveTab =
   | 'culture'
   | 'planner'
   | 'dictionary'
+  | 'favorites'
   | 'progress'
   | 'settings';
 
@@ -39,6 +41,7 @@ interface SidebarProps {
   isOpenMobile?: boolean;
   onCloseMobile?: () => void;
   dueSRSCount?: number;
+  favoritesCount?: number;
 }
 
 interface NavItem {
@@ -54,7 +57,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onSelectTab,
   isOpenMobile = false,
   onCloseMobile,
-  dueSRSCount = 0
+  dueSRSCount = 0,
+  favoritesCount = 0
 }) => {
   const studyItems: NavItem[] = [
     { id: 'dashboard', label: 'Panel Principal', labelJp: 'ダッシュボード', icon: Home },
@@ -67,6 +71,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   ];
 
   const exploreItems: NavItem[] = [
+    { id: 'favorites', label: 'Favoritos & Guardados', labelJp: 'お気に入り', icon: Star, badge: favoritesCount },
     { id: 'games', label: 'Actividades & Minijuegos', labelJp: 'ゲームと練習', icon: Gamepad2 },
     { id: 'reading', label: 'Historias & Lectura', labelJp: '多読ライブラリ', icon: Library },
     { id: 'culture', label: 'Cultura Japonesa', labelJp: '日本文化と礼儀', icon: Compass },

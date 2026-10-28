@@ -36,8 +36,35 @@ export interface UserProfile {
   level: number;
   completedLessons: string[]; // lesson IDs
   hankoBadges: string[]; // badge IDs
+  favorites: string[]; // item IDs: vocab, kanji char, lesson ID
+  lastActiveLessonId?: string;
+  currentModuleId?: string;
+  lastActivityDate?: string;
   preferences: UserPreferences;
   createdAt: string;
+}
+
+export interface LessonDetail {
+  id: string;
+  title: string;
+  titleJp: string;
+  module: string;
+  moduleId: string;
+  level: string;
+  objective: string;
+  content: string[];
+  audioSamples?: {
+    text: string;
+    kana: string;
+    romaji: string;
+    es: string;
+  }[];
+  quiz: {
+    question: string;
+    options: string[];
+    correctIndex: number;
+    explanation: string;
+  };
 }
 
 // SM-2 Spaced Repetition Types
@@ -262,6 +289,18 @@ export interface CultureArticle {
 }
 
 // Learning Path Modules
+export interface ModuleLesson {
+  id: string;
+  title: string;
+  titleJp: string;
+  description: string;
+  type: 'kana' | 'vocab' | 'grammar' | 'reading' | 'culture' | 'checkpoint';
+  estimatedMinutes: number;
+  unlockedByDefault?: boolean;
+}
+
+export type Lesson = ModuleLesson;
+
 export interface LearningModule {
   levelNumber: number;
   id: string;
@@ -270,15 +309,7 @@ export interface LearningModule {
   jlptEquivalent: string;
   description: string;
   color: string;
-  lessons: {
-    id: string;
-    title: string;
-    titleJp: string;
-    description: string;
-    type: 'kana' | 'vocab' | 'grammar' | 'reading' | 'culture' | 'checkpoint';
-    estimatedMinutes: number;
-    unlockedByDefault?: boolean;
-  }[];
+  lessons: ModuleLesson[];
 }
 
 // Study Session Plan

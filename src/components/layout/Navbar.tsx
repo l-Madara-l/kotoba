@@ -1,5 +1,5 @@
 import React from 'react';
-import { Flame, Moon, Sun, BookOpen, Volume2, Sparkles, Menu } from 'lucide-react';
+import { Flame, Moon, Sun, BookOpen, Volume2, Sparkles, Menu, Star } from 'lucide-react';
 import { UserProfile } from '../../types';
 
 interface NavbarProps {
@@ -8,6 +8,7 @@ interface NavbarProps {
   onOpenMobileMenu?: () => void;
   dueSRSCount: number;
   onOpenSRSReviews: () => void;
+  onOpenFavorites?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -15,7 +16,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   onUpdatePreferences,
   onOpenMobileMenu,
   dueSRSCount,
-  onOpenSRSReviews
+  onOpenSRSReviews,
+  onOpenFavorites
 }) => {
   const isDark = profile.preferences.theme === 'dark';
 
@@ -104,6 +106,23 @@ export const Navbar: React.FC<NavbarProps> = ({
           <span>Nv.{profile.level}</span>
           <span className="text-[10px] opacity-80">({profile.xp} XP)</span>
         </div>
+
+        {/* Favorites Quick Button */}
+        {onOpenFavorites && (
+          <button
+            onClick={onOpenFavorites}
+            aria-label="Ver elementos favoritos y guardados"
+            title={`${profile.favorites?.length || 0} elementos guardados en favoritos`}
+            className="p-2 rounded-full border border-piedra/60 text-oro hover:bg-oro/10 transition-colors relative"
+          >
+            <Star size={16} className={(profile.favorites?.length || 0) > 0 ? "fill-oro text-oro" : "text-sumi/60 dark:text-washi/60"} />
+            {(profile.favorites?.length || 0) > 0 && (
+              <span className="absolute -top-1 -right-1 px-1 min-w-[16px] h-4 text-[9px] font-bold rounded-full bg-torii text-marfil flex items-center justify-center">
+                {profile.favorites.length}
+              </span>
+            )}
+          </button>
+        )}
 
         {/* Quick toggles (Romaji & Furigana) */}
         <div className="hidden md:flex items-center gap-1 border-l border-piedra/60 pl-3">

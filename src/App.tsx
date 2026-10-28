@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { UserProfile, SRSItem, DailyStudyRecord, SRSRating } from './types';
 import { StorageService } from './services/storageService';
+import { ProgressService } from './services/progressService';
 import { Navbar } from './components/layout/Navbar';
 import { Sidebar, ActiveTab } from './components/layout/Sidebar';
 import { MobileNav } from './components/layout/MobileNav';
@@ -18,10 +19,29 @@ import { GradedReaderView } from './features/reading/GradedReaderView';
 import { CultureView } from './features/culture/CultureView';
 import { StudyPlannerView } from './features/planner/StudyPlannerView';
 import { DictionaryView } from './features/dictionary/DictionaryView';
+import { FavoritesView } from './features/favorites/FavoritesView';
 import { ProgressStatsView } from './features/progress/ProgressStatsView';
 import { SettingsView } from './features/settings/SettingsView';
 import { LessonModal } from './features/learning-path/LessonModal';
 import { SRSService } from './services/srsService';
+
+const VALID_TABS: ActiveTab[] = [
+  'dashboard',
+  'learning-path',
+  'writing-lab',
+  'vocabulary',
+  'grammar',
+  'listening',
+  'conversation',
+  'games',
+  'reading',
+  'culture',
+  'planner',
+  'dictionary',
+  'favorites',
+  'progress',
+  'settings'
+];
 
 export function App() {
   const [profile, setProfile] = useState<UserProfile>(StorageService.getUserProfile());
@@ -42,13 +62,33 @@ export function App() {
     }
   }, [profile.preferences.theme]);
 
+  // Sync with URL Hash routing (#favorites, #learning-path, #dashboard, etc.)
+  useEffect(() => {
+    const handleHashChange = () => {
+      const rawHash = window.location.hash.replace(/^#\/?/, '').trim();
+      if (rawHash && VALID_TABS.includes(rawHash as ActiveTab)) {
+        setActiveTab(rawHash as ActiveTab);
+      }
+    };
+
+    handleHashChange();
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  const handleSelectTab = (tab: ActiveTab) => {
+    setActiveTab(tab);
+    window.location.hash = `#${tab}`;
+  };
+
   const dueItems = SRSService.getDueItems(srsItems);
 
   // Update profile preferences
   const handleUpdatePreferences = (updated: Partial<UserProfile['preferences']>) => {
-    const updatedProfile = {
+    const updatedProfile: UserProfile = {
       ...profile,
-      preferences: { ...profile.preferences, ...updated }
+      preferences: { ...profile.preferences, ...updated },
+      lastActivityDate: new Date().toISOString()
     };
     setProfile(updatedProfile);
     StorageService.saveUserProfile(updatedProfile);
@@ -56,14 +96,36 @@ export function App() {
 
   // Update entire profile
   const handleUpdateProfile = (updated: Partial<UserProfile>) => {
-    const updatedProfile = { ...profile, ...updated };
+    const updatedProfile: UserProfile = {
+      ...profile,
+      ...updated,
+      lastActivityDate: new Date().toISOString()
+    };
     setProfile(updatedProfile);
     StorageService.saveUserProfile(updatedProfile);
   };
 
   // Complete onboarding
   const handleCompleteOnboarding = (data: Partial<UserProfile>) => {
-    const updatedProfile = { ...profile, ...data };
+    let startingLessonId = 'l0-phonetics';
+    let startingModuleId = 'module-0';
+
+    if (data.knownHiragana && data.knownKatakana) {
+      startingLessonId = 'l3-particles-wa-ga';
+      startingModuleId = 'module-3';
+    } else if (data.knownHiragana) {
+      startingLessonId = 'l2-katakana-rules';
+      startingModuleId = 'module-2';
+    }
+
+    const updatedProfile: UserProfile = {
+      ...profile,
+      ...data,
+      lastActiveLessonId: startingLessonId,
+      currentModuleId: startingModuleId,
+      lastActivityDate: new Date().toISOString()
+    };
+
     setProfile(updatedProfile);
     StorageService.saveUserProfile(updatedProfile);
     StorageService.setOnboardingCompleted(true);
@@ -71,7 +133,7 @@ export function App() {
   };
 
   // SRS item review callback
-  const handleItemReviewed = (updatedItem: SRSItem, rating: SRSRating) => {
+  const handleItemReviewed = (updatedItem: SRSItem, _rating: SRSRating) => {
     const updatedItems = srsItems.map(item =>
       item.id === updatedItem.id ? updatedItem : item
     );
@@ -86,30 +148,20 @@ export function App() {
     setStudyRecords(StorageService.getDailyStudyRecords());
   };
 
-  // Lesson completed callback
-  const handleLessonCompleted = (lessonId: string, xpEarned: number) => {
-    const completed = new Set(profile.completedLessons);
-    completed.add(lessonId);
-
-    // Also award hanko badges if milestones hit
-    const badges = new Set(profile.hankoBadges);
-    badges.add('badge-first-step');
-    if (lessonId.startsWith('l1-')) {
-      badges.add('badge-hiragana-master');
-    }
-
-    const updatedProfile: UserProfile = {
-      ...profile,
-      completedLessons: Array.from(completed),
-      hankoBadges: Array.from(badges),
-      xp: profile.xp + xpEarned,
-      level: Math.floor((profile.xp + xpEarned) / 200) + 1
-    };
-
-    setProfile(updatedProfile);
-    StorageService.saveUserProfile(updatedProfile);
+  // Lesson completed callback with single source of truth in ProgressService
+  const handleLessonCompleted = (lessonId: string, xpEarned: number = 50) => {
+    const result = ProgressService.completeLesson(profile, lessonId, xpEarned);
+    setProfile(result.updatedProfile);
+    StorageService.saveUserProfile(result.updatedProfile);
     StorageService.logSession(10, xpEarned, 0, 1);
     setStudyRecords(StorageService.getDailyStudyRecords());
+  };
+
+  // Toggle favorite items (Vocab, Kanji, Grammar, Custom)
+  const handleToggleFavorite = (itemId: string) => {
+    const { updatedProfile } = ProgressService.toggleFavorite(profile, itemId);
+    setProfile(updatedProfile);
+    StorageService.saveUserProfile(updatedProfile);
   };
 
   // Add word from dictionary or stories to SRS deck
@@ -136,7 +188,7 @@ export function App() {
     StorageService.saveSRSItems(updated);
   };
 
-  // Reload all data after import
+  // Reload all data after import or clear
   const handleDataReload = () => {
     setProfile(StorageService.getUserProfile());
     setSRSItems(StorageService.getSRSItems());
@@ -152,16 +204,18 @@ export function App() {
         onOpenMobileMenu={() => setShowMobileSidebar(true)}
         dueSRSCount={dueItems.length}
         onOpenSRSReviews={() => setIsSRSModalOpen(true)}
+        onOpenFavorites={() => handleSelectTab('favorites')}
       />
 
       <div className="flex-1 flex w-full">
         {/* Desktop and Mobile Sidebar */}
         <Sidebar
           activeTab={activeTab}
-          onSelectTab={tab => setActiveTab(tab)}
+          onSelectTab={handleSelectTab}
           isOpenMobile={showMobileSidebar}
           onCloseMobile={() => setShowMobileSidebar(false)}
           dueSRSCount={dueItems.length}
+          favoritesCount={profile.favorites?.length || 0}
         />
 
         {/* Main Content View Container */}
@@ -171,7 +225,7 @@ export function App() {
               profile={profile}
               srsItems={srsItems}
               studyRecords={studyRecords}
-              onNavigate={setActiveTab}
+              onNavigate={handleSelectTab}
               onStartReview={() => setIsSRSModalOpen(true)}
               onStartLesson={lessonId => setActiveLessonModalId(lessonId)}
             />
@@ -191,6 +245,8 @@ export function App() {
               srsItems={srsItems}
               onStartReview={() => setIsSRSModalOpen(true)}
               showRomaji={profile.preferences.showRomaji}
+              favorites={profile.favorites}
+              onToggleFavorite={handleToggleFavorite}
             />
           )}
 
@@ -211,7 +267,7 @@ export function App() {
           {activeTab === 'planner' && (
             <StudyPlannerView
               profile={profile}
-              onNavigate={setActiveTab}
+              onNavigate={handleSelectTab}
               onLogStudySession={(mins, xp, rev, nw) => {
                 StorageService.logSession(mins, xp, rev, nw);
                 setProfile(StorageService.getUserProfile());
@@ -221,7 +277,20 @@ export function App() {
           )}
 
           {activeTab === 'dictionary' && (
-            <DictionaryView onAddWordToSRS={handleAddWordToSRS} />
+            <DictionaryView
+              onAddWordToSRS={handleAddWordToSRS}
+              favorites={profile.favorites}
+              onToggleFavorite={handleToggleFavorite}
+            />
+          )}
+
+          {activeTab === 'favorites' && (
+            <FavoritesView
+              profile={profile}
+              onToggleFavorite={handleToggleFavorite}
+              onAddWordToSRS={handleAddWordToSRS}
+              onNavigate={handleSelectTab}
+            />
           )}
 
           {activeTab === 'progress' && (
@@ -240,13 +309,25 @@ export function App() {
               onDataReload={handleDataReload}
             />
           )}
+
+          {/* Fallback to prevent blank screen if route/tab is unknown */}
+          {!VALID_TABS.includes(activeTab) && (
+            <DashboardView
+              profile={profile}
+              srsItems={srsItems}
+              studyRecords={studyRecords}
+              onNavigate={handleSelectTab}
+              onStartReview={() => setIsSRSModalOpen(true)}
+              onStartLesson={lessonId => setActiveLessonModalId(lessonId)}
+            />
+          )}
         </main>
       </div>
 
       {/* Mobile Bottom Navigation Bar */}
       <MobileNav
         activeTab={activeTab}
-        onSelectTab={setActiveTab}
+        onSelectTab={handleSelectTab}
         onOpenMore={() => setShowMobileSidebar(true)}
         dueSRSCount={dueItems.length}
       />
@@ -272,6 +353,7 @@ export function App() {
           onClose={() => setActiveLessonModalId(null)}
           onCompleteLesson={handleLessonCompleted}
           isCompleted={profile.completedLessons.includes(activeLessonModalId)}
+          onNavigateLesson={nextId => setActiveLessonModalId(nextId)}
         />
       )}
     </div>
